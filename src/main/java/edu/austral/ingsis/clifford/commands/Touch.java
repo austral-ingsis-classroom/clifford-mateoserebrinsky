@@ -1,27 +1,33 @@
 package edu.austral.ingsis.clifford.commands;
 
 import edu.austral.ingsis.clifford.FileSystemImplementation;
-import edu.austral.ingsis.clifford.fileSystem.Directory;
-import edu.austral.ingsis.clifford.fileSystem.File;
+import edu.austral.ingsis.clifford.Pair;
+import edu.austral.ingsis.clifford.result.Result;
 
-public non-sealed class Touch implements Command {
+public final class Touch implements Command {
 
-  String name;
-  Directory currentDirectory;
+    private final String fileName;
 
-  public Touch(FileSystemImplementation fileSystem, String name) {
-    this.name = name;
-    this.currentDirectory = fileSystem.getCurrentDirectory();
-  }
-
-  @Override
-  public String execute() {
-    if (name.contains("/") || name.contains(" ")) {
-      return ("The file name cant contain spaces or /");
-    } else {
-      File newFile = new File(name, currentDirectory);
-      currentDirectory.addFile(newFile);
-      return ("'" + name + "'" + " file created");
+    public Touch(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException("File name cannot be null or empty");
+        }
+        this.fileName = fileName;
     }
-  }
+
+    @Override
+    public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {
+        try {
+            if (fileName.contains("/") || fileName.contains(" ")) {
+                return new Result.Error<>("File name cannot contain '/' or spaces");
+            }
+
+            FileSystemImplementation newFs = fs.addFile(fileName);
+            String output = String.format("'%s' file created", fileName);
+
+            return new Result.Success<>(new Pair<>(output, newFs));
+        } catch (Exception e) {
+            return new Result.Error<>("Error: " + e.getMessage());
+        }
+    }
 }

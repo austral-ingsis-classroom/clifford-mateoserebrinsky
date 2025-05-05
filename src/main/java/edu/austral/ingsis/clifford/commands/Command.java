@@ -1,6 +1,10 @@
 package edu.austral.ingsis.clifford.commands;
 
-public sealed interface Command permits Cd, Ls, Rm, Mkdir, Pwd, Touch {
+import edu.austral.ingsis.clifford.FileSystemImplementation;
+import edu.austral.ingsis.clifford.Pair;
+import edu.austral.ingsis.clifford.result.Result;
 
-  String execute();
+public sealed interface Command permits Ls, Cd, Touch, Mkdir, Rm, Pwd {
+  Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs);
 }
+

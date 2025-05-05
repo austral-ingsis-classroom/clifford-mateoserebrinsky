@@ -1,50 +1,75 @@
 package edu.austral.ingsis.clifford;
 
 import edu.austral.ingsis.clifford.commands.*;
-import edu.austral.ingsis.clifford.result.Error;
 import edu.austral.ingsis.clifford.result.Result;
-import edu.austral.ingsis.clifford.result.Success;
 
 public class CommandParser {
 
-  public Result<Command> interpretCommand(String command, FileSystemImplementation system) {
-    String[] items = command.trim().split("\\s+");
-    if (items.length == 0 || items[0].isBlank()) {
-      return new Error<>("Empty command");
+  public Result<Command> interpretCommand(String command) {
+    String[] parts = command.trim().split("\\s+");
+    if (parts.length == 0 || parts[0].isBlank()) {
+      return new Result.Error<>("Empty command");
     }
-
+    String[] items = command.trim().split("\\s+");
     String mainCommand = items[0];
 
-    if (mainCommand.equals("touch")) {
-      if (items.length < 2) return new Error<>("Not enough arguments for 'touch'");
-      return new Success<>(new Touch(system, items[1]));
+    return switch (mainCommand) {
+          case "mkdir" -> {
+              if (parts.length < 2) {
+                  yield new Result.Error<>("Usage: mkdir <directory_name>");
+              }
+              yield new Result.Success<>(new Mkdir(parts[1]));
+          }
+          case "cd" -> {
+              if (parts.length < 2) {
+                  yield new Result.Error<>("Usage: cd <directory_path>");
+              }
+              yield new Result.Success<>(new Cd(parts[1]));
+          }
+          case "ls" ->{
+            String order = "";
+            if (parts.length > 1 && parts[1].startsWith("--ord=")) {
+              order = parts[1].substring(6);
+            }
+            yield new Result.Success<>(new Ls(order));
+          }
+
+          case "touch"->{
+            if (parts.length < 2) {
+              yield new Result.Error<>("Missing argument");
+            }
+            String name = parts[1];
+            yield new Result.Success<>(new Touch(name));
+          }
+
+          case "rm"->{
+            if (parts.length < 2) {
+              yield new Result.Error<>("Usage: rm [--recursive] <target>");
+            }
+
+            boolean recursive = false;
+            String target;
+
+            if (parts.length > 2 && parts[1].equals("--recursive")) {
+              recursive = true;
+              target = parts[2];
+            } else {
+              target = parts[1];
+            }
+
+            yield new Result.Success<>(new Rm(target, recursive));
+          }
+
+          case "pwd" ->{
+            if (parts.length > 2) {
+              yield new Result.Error<>("More arguments than expected");
+            }
+            yield new Result.Success<>(new Pwd());
+          }
+
+          default -> new Result.Error<>("'" + mainCommand + "' is not a recognized command");
+      };
     }
 
-    if (mainCommand.equals("cd")) {
-      if (items.length < 2) return new Error<>("Not enough arguments for 'cd'");
-      return new Success<>(new Cd(system, items[1]));
-    }
 
-    if (mainCommand.equals("ls")) {
-      String path = (items.length >= 2) ? items[1] : "-";
-      return new Success<>(new Ls(system, path));
-    }
-
-    if (mainCommand.equals("mkdir")) {
-      if (items.length < 2) return new Error<>("Not enough arguments for 'mkdir'");
-      return new Success<>(new Mkdir(system, items[1]));
-    }
-
-    if (mainCommand.equals("rm")) {
-      if (items.length < 2) return new Error<>("Not enough arguments for 'rm'");
-      String file = items.length > 2 && "--recursive".equals(items[1]) ? items[2] : items[1];
-      boolean recursive = items.length > 2 && "--recursive".equals(items[1]);
-      return new Success<>(new Rm(system, file, recursive));
-    }
-
-    if (mainCommand.equals("pwd")) {
-      return new Success<>(new Pwd(system));
-    }
-    return new Error<>("'" + mainCommand + "' is not a recognized command");
   }
-}

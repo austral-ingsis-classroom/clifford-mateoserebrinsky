@@ -4,26 +4,41 @@ import edu.austral.ingsis.clifford.commands.*;
 import edu.austral.ingsis.clifford.result.Result;
 
 public class Terminal {
-
-  private final FileSystemImplementation system;
+  private FileSystemImplementation system;
 
   public Terminal(FileSystemImplementation system) {
     this.system = system;
   }
 
-  public String run(String command) {
+  public Result<Pair<String, FileSystemImplementation>> run(String commandStr) {
     CommandParser commandParser = new CommandParser();
-    Result<Command> result = commandParser.interpretCommand(command, system);
+    Result<Command> parsingResult = commandParser.interpretCommand(commandStr);
 
-    if (result.isSuccess()) {
-      Command commandToExecute = result.getValue();
-      String output = commandToExecute.execute();
-      System.out.println(output);
-      return output;
-    } else {
-      String errorMessage = result.getError();
-      System.out.println(errorMessage);
-      return errorMessage;
+    if (parsingResult.isError()) {
+      String error = parsingResult.getErrorMessage();
+      System.out.println("ERROR: " + error);
+      return new Result.Error<>(error);
     }
+
+    Result<Pair<String, FileSystemImplementation>> executionResult =
+            parsingResult.getValue().execute(system);
+
+
+    if (executionResult.isSuccess()) {
+      this.system = executionResult.getValue().second();
+    }
+
+    if (executionResult.isSuccess()) {
+      String output = executionResult.getValue().first();
+      if (!output.isEmpty()) {
+        System.out.println(output);
+      }
+    } else {
+      System.out.println("ERROR: " + executionResult.getErrorMessage());
+    }
+
+    return executionResult;
   }
 }
+
+

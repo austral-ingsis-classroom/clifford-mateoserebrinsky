@@ -1,23 +1,32 @@
 package edu.austral.ingsis.clifford.commands;
 
 import edu.austral.ingsis.clifford.FileSystemImplementation;
-import edu.austral.ingsis.clifford.fileSystem.Directory;
+import edu.austral.ingsis.clifford.Pair;
+import edu.austral.ingsis.clifford.result.Result;
 
-public non-sealed class Mkdir implements Command {
+public final class Mkdir implements Command {
+  private final String directoryName;
 
-  private final String dir;
-  private final FileSystemImplementation fileSystem;
-
-  public Mkdir(FileSystemImplementation fileSystem, String dir) {
-    this.fileSystem = fileSystem;
-    this.dir = dir;
+  public Mkdir(String directoryName) {
+    if (directoryName == null || directoryName.isBlank()) {
+      throw new IllegalArgumentException("Directory name cannot be null or empty");
+    }
+    this.directoryName = directoryName;
   }
 
   @Override
-  public String execute() {
-    Directory newDir = new Directory(dir);
-    Directory current = fileSystem.getCurrentDirectory();
-    current.addFile(newDir);
-    return ("Directory '" + dir + "' added to " + current.getName());
+  public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {
+    try {
+      if (directoryName.contains("/") || directoryName.contains(" ")) {
+        return new Result.Error<>("Directory name cannot contain '/' or spaces");
+      }
+
+      FileSystemImplementation newFs = fs.addDirectory(directoryName);
+      String output = String.format("'%s' directory created", directoryName);
+
+      return new Result.Success<>(new Pair<>(output, newFs));
+    } catch (Exception e) {
+      return new Result.Error<>("Error: " + e.getMessage());
+    }
   }
 }

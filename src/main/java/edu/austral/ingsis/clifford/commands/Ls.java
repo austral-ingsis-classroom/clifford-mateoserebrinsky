@@ -1,45 +1,44 @@
 package edu.austral.ingsis.clifford.commands;
 
 import edu.austral.ingsis.clifford.FileSystemImplementation;
+import edu.austral.ingsis.clifford.Pair;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
-import java.util.Comparator;
+import edu.austral.ingsis.clifford.result.Result;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public non-sealed class Ls implements Command {
+public final class Ls implements Command {
+  private final String order;
 
-  Directory curentDirectory;
-  String flag;
-
-  public Ls(FileSystemImplementation fileSystem, String flag) {
-    this.curentDirectory = fileSystem.getCurrentDirectory();
-    if (flag == null) {
-      this.flag = "-";
-    } else {
-      this.flag = flag;
-    }
+  public Ls(String order) {
+    this.order = validateOrder(order);
   }
 
   @Override
-  public String execute() {
-    switch (flag) {
-      case "-" -> {
-        return curentDirectory.getFilesNames().toString();
-      }
-      case "--ord=asc" -> {
-        List<String> files = curentDirectory.getFilesNames();
-        Comparator<String> ascComparator = Comparator.naturalOrder();
-        files.sort(ascComparator);
-        return files.toString();
-      }
-      case "--ord=desc" -> {
-        List<String> files = curentDirectory.getFilesNames();
-        Comparator<String> ascComparator = Comparator.reverseOrder();
-        files.sort(ascComparator);
-        return files.toString();
-      }
-      default -> {
-        return "Invalid flag";
-      }
+  public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {
+    Directory currentDirectory = fs.getCurrentDirectory();
+    List<String> items = new ArrayList<>(currentDirectory.getFilesNames());
+
+    if ("asc".equals(order)) {
+      Collections.sort(items);
+    } else if ("desc".equals(order)) {
+      items.sort(Collections.reverseOrder());
     }
+
+    StringBuilder output = new StringBuilder();
+    if (!items.isEmpty()) {
+      output.append(String.join(" ", items));
+    }
+
+    return new Result.Success<>(new Pair<>(output.toString(), fs));
+  }
+
+  private String validateOrder(String order) {
+    if (order == null || order.isEmpty() || "asc".equals(order) || "desc".equals(order)) {
+      return order;
+    }
+    throw new IllegalArgumentException("Invalid order parameter. Use 'asc' or 'desc'");
   }
 }

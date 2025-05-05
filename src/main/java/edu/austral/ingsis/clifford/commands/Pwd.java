@@ -1,20 +1,27 @@
 package edu.austral.ingsis.clifford.commands;
 
 import edu.austral.ingsis.clifford.FileSystemImplementation;
-import edu.austral.ingsis.clifford.PathGetter;
+import edu.austral.ingsis.clifford.Pair;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
+import edu.austral.ingsis.clifford.result.Result;
 
-public non-sealed class Pwd implements Command {
 
-  Directory currentDirectory;
+public final class Pwd implements Command {
 
-  public Pwd(FileSystemImplementation fileSystem) {
-    this.currentDirectory = fileSystem.getCurrentDirectory();
+
+  public Pwd() {
   }
 
   @Override
-  public String execute() {
-    PathGetter pathGetter = new PathGetter();
-    return (pathGetter.getPath(currentDirectory));
+  public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {
+    try {
+      Directory currentDirectory = fs.getCurrentDirectory();
+
+      String path = currentDirectory.name();
+
+      return new Result.Success<>(new Pair<>(path, fs));
+    } catch (Exception e) {
+      return new Result.Error<>("Error fetching path: " + e.getMessage());
+    }
   }
 }

@@ -1,46 +1,27 @@
 package edu.austral.ingsis.clifford.fileSystem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class Directory implements FileSystemItems {
+public final class Directory implements FileSystemItems {
+  private final String name;
+  private final Map<String, FileSystemItems> items; // Representación de archivos y subdirectorios
 
-  String name;
-  String path;
-  Directory parent;
-
-  private final Map<String, FileSystemItems> files;
+  public Directory(String name, Map<String, FileSystemItems> items) {
+    this.name = Objects.requireNonNull(name, "Name cannot be null");
+    this.items = Map.copyOf(items);
+  }
 
   public Directory(String name) {
-    this.name = name;
-    this.files = new HashMap<>();
+    this.name = Objects.requireNonNull(name, "Name cannot be null");
+    this.items = Collections.emptyMap();
   }
 
-  public List<FileSystemItems> getFiles() {
-    return new ArrayList<>(files.values());
+  public List<String> listItems() {
+    return new ArrayList<>(items.keySet());
   }
 
-  public List<String> getFilesNames() {
-    return new ArrayList<>(files.keySet());
-  }
-
-  public void addFile(FileSystemItems item) {
-    item.setParent(this);
-    files.put(item.getName(), item);
-  }
-
-  public Directory getDirectory(String name) {
-    FileSystemItems item = files.get(name);
-    if (item != null && item.isDirectory()) {
-      return (Directory) item;
-    }
-    return null;
-  }
-
-  public FileSystemItems getItem(String name) {
-    return files.get(name);
+  public String name() {
+    return name;
   }
 
   @Override
@@ -49,21 +30,54 @@ public class Directory implements FileSystemItems {
   }
 
   @Override
-  public String getName() {
-    return name;
+  public String getPath() {
+    return "";
+  }
+
+  public Map<String, FileSystemItems> getItems() {
+    return items;
+  }
+
+  public boolean isEmpty(){
+    return items.isEmpty();
+  }
+
+
+
+  public Directory addItem(String name, FileSystemItems item) {
+    if (items.containsKey(name)) throw new IllegalArgumentException("Item already exists: " + name);
+    Map<String, FileSystemItems> newItems = new HashMap<>(items);
+    newItems.put(name, item);
+    return new Directory(this.name, newItems);
+  }
+
+
+  public Directory removeItem(String name) {
+    if (!items.containsKey(name)) throw new IllegalArgumentException("Item does not exist: " + name);
+    Map<String, FileSystemItems> newItems = new HashMap<>(items);
+    newItems.remove(name);
+    return new Directory(this.name, newItems);
+  }
+
+
+  public FileSystemItems getItem(String name) {
+    return items.get(name);
+  }
+
+
+  public List<String> getFilesNames(){
+    return new ArrayList<>(items.keySet());
   }
 
   @Override
-  public Directory getParent() {
-    return parent;
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Directory directory)) return false;
+    return name.equals(directory.name) && items.equals(directory.items);
   }
 
   @Override
-  public void setParent(Directory parent) {
-    this.parent = parent;
-  }
-
-  public void removeItem(String name) {
-    files.remove(name);
+  public int hashCode() {
+    return Objects.hash(name, items);
   }
 }

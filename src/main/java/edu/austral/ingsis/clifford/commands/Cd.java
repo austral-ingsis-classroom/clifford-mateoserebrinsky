@@ -1,80 +1,82 @@
 package edu.austral.ingsis.clifford.commands;
 
 import edu.austral.ingsis.clifford.FileSystemImplementation;
+import edu.austral.ingsis.clifford.Pair;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
+import edu.austral.ingsis.clifford.result.Result;
 
-public non-sealed class Cd implements Command {
-  String dir;
-  Directory currentDirectory;
-  FileSystemImplementation fileSystem;
+public final class Cd implements Command {
+    private final String path;
 
-  public Cd(FileSystemImplementation fileSystem, String path) {
-    this.dir = path;
-    this.currentDirectory = fileSystem.getCurrentDirectory();
-    this.fileSystem = fileSystem;
-  }
-
-  @Override
-  public String execute() {
-    return resolvePath(dir);
-  }
-
-  public String resolvePath(String path) {
-    if (isInvalidPath(path)) return "No path provided";
-
-    String specialCase = handleSpecialCases(path);
-    if (specialCase != null) return specialCase;
-
-    return navigatePath(path);
-  }
-
-  private boolean isInvalidPath(String path) {
-    return path == null || path.isEmpty();
-  }
-
-  private String handleSpecialCases(String path) {
-    switch (path) {
-      case ".." -> {
-        return moveToParent();
-      }
-      case "." -> {
-        return stayInCurrentDirectory();
-      }
-      default -> {
-        return null;
-      }
-    }
-  }
-
-  private String moveToParent() {
-    if (currentDirectory.getParent() != null) {
-      fileSystem.setCurrentDirectory(currentDirectory.getParent());
-      return "Moved to directory: " + "/" + currentDirectory.getParent().getName();
-    } else {
-      return "Already at root directory";
-    }
-  }
-
-  private String stayInCurrentDirectory() {
-    fileSystem.setCurrentDirectory(currentDirectory);
-    return "Staying in current directory: " + currentDirectory.getName();
-  }
-
-  private String navigatePath(String path) {
-    String[] directoryKeys = path.split("/");
-    Directory currentDir = currentDirectory;
-
-    for (String directoryKey : directoryKeys) {
-      if (directoryKey.isEmpty()) continue;
-      Directory nextDirectory = currentDir.getDirectory(directoryKey);
-      if (nextDirectory != null) {
-        currentDir = nextDirectory;
-      } else {
-        return "Directory not found: " + directoryKey;
-      }
+    public Cd(String path) {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Path cannot be null or empty");
+        }
+        this.path = path;
     }
 
-    fileSystem.setCurrentDirectory(currentDir);
-    return "Moved to directory: " + currentDir.getName();
-  }
+    @Override
+    public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {
+        try {
+
+            Directory targetDirectory = resolveTargetDirectory(fs, path);
+
+
+            FileSystemImplementation newFs = fs.changeCurrentDirectory(targetDirectory);
+
+
+            String output = "Moved to directory: '" + newFs.getCurrentDirectory().name() + "'";
+            return new Result.Success<>(new Pair<>(output, newFs));
+        } catch (IllegalArgumentException e) {
+            return new Result.Error<>("Error: " + e.getMessage());
+        }
+    }
+
+    private Directory resolveTargetDirectory(FileSystemImplementation fs, String path) {
+
+        if (path.equals(".")) {
+            return fs.getCurrentDirectory();
+        }
+
+
+        if (path.equals("..")) {
+            String currentPath = fs.getCurrentDirectory().name();
+
+            if (currentPath.equals("/root")) {
+                return fs.getCurrentDirectory();
+            }
+
+            int lastIndex = currentPath.lastIndexOf('/');
+            String parentPath = (lastIndex <= 0) ? "/" : currentPath.substring(0, lastIndex);
+
+            Directory parentDirectory = fs.resolvePath(parentPath);
+            if (parentDirectory == null) {
+                throw new IllegalArgumentException("Directorio padre no encontrado: " + parentPath);
+            }
+
+            return parentDirectory;
+        }
+
+
+        Directory target = fs.resolvePath(path);
+        if (target == null) {
+            throw new IllegalArgumentException("Directory not found: " + path);
+        }
+
+        return target;
+    }
+
+    private static Directory getDirectory(FileSystemImplementation fs, String currentPath) {
+        String parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        parentPath = parentPath.isEmpty() ? "/" : parentPath;
+
+        Directory parentDirectory = fs.resolvePath(parentPath);
+        if (parentDirectory == null) {
+            throw new IllegalArgumentException("Parent directory not found: " + parentPath);
+        }
+
+        return parentDirectory;
+    }
+
+
 }
