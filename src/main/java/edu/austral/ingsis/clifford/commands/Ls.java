@@ -4,7 +4,6 @@ import edu.austral.ingsis.clifford.FileSystemImplementation;
 import edu.austral.ingsis.clifford.Pair;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
 import edu.austral.ingsis.clifford.result.Result;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +23,8 @@ public final class Ls implements Command {
     if ("asc".equals(order)) {
       Collections.sort(items);
     } else if ("desc".equals(order)) {
+      items.sort(Collections.reverseOrder());
+    } else {
       items.sort(Collections.reverseOrder());
     }
 

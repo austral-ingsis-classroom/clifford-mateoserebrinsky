@@ -5,12 +5,9 @@ import edu.austral.ingsis.clifford.Pair;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
 import edu.austral.ingsis.clifford.result.Result;
 
-
 public final class Pwd implements Command {
 
-
-  public Pwd() {
-  }
+  public Pwd() {}
 
   @Override
   public Result<Pair<String, FileSystemImplementation>> execute(FileSystemImplementation fs) {

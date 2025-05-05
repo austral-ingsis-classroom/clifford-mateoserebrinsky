@@ -59,7 +59,8 @@ public class FileSystemLimitCasesTest {
     Result<Pair<String, FileSystemImplementation>> result = cmd.run("cd fake_directory");
     String actual = result.getErrorMessage();
     String expected = "Error: Invalid path: fake_directory";
-    assertEquals(expected, actual, "Expected an error message for cd into a non-existent directory");
+    assertEquals(
+        expected, actual, "Expected an error message for cd into a non-existent directory");
   }
 
   @Test
@@ -75,6 +76,7 @@ public class FileSystemLimitCasesTest {
     Result<Pair<String, FileSystemImplementation>> result = cmd.run("cd ..");
     String actual = result.getValue().first();
     String expected = "Moved to directory: '/'";
-    assertEquals(expected, actual, "Expected to stay at the root directory when typing 'cd ..' in root");
+    assertEquals(
+        expected, actual, "Expected to stay at the root directory when typing 'cd ..' in root");
   }
 }

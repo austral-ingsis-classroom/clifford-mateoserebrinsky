@@ -38,11 +38,9 @@ public final class Directory implements FileSystemItems {
     return items;
   }
 
-  public boolean isEmpty(){
+  public boolean isEmpty() {
     return items.isEmpty();
   }
-
-
 
   public Directory addItem(String name, FileSystemItems item) {
     if (items.containsKey(name)) throw new IllegalArgumentException("Item already exists: " + name);
@@ -51,21 +49,19 @@ public final class Directory implements FileSystemItems {
     return new Directory(this.name, newItems);
   }
 
-
   public Directory removeItem(String name) {
-    if (!items.containsKey(name)) throw new IllegalArgumentException("Item does not exist: " + name);
+    if (!items.containsKey(name))
+      throw new IllegalArgumentException("Item does not exist: " + name);
     Map<String, FileSystemItems> newItems = new HashMap<>(items);
     newItems.remove(name);
     return new Directory(this.name, newItems);
   }
 
-
   public FileSystemItems getItem(String name) {
     return items.get(name);
   }
 
-
-  public List<String> getFilesNames(){
+  public List<String> getFilesNames() {
     return new ArrayList<>(items.keySet());
   }
 

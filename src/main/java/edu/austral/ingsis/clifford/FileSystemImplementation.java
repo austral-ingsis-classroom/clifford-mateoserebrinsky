@@ -3,7 +3,6 @@ package edu.austral.ingsis.clifford;
 import edu.austral.ingsis.clifford.fileSystem.Directory;
 import edu.austral.ingsis.clifford.fileSystem.File;
 import edu.austral.ingsis.clifford.fileSystem.FileSystemItems;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,7 +12,7 @@ public record FileSystemImplementation(Directory root, Directory currentDirector
     this(new Directory("/", Map.of()), new Directory("/")); // Raíz vacía
   }
 
-  public Directory getCurrentDirectory(){
+  public Directory getCurrentDirectory() {
     return currentDirectory;
   }
 
@@ -30,13 +29,15 @@ public record FileSystemImplementation(Directory root, Directory currentDirector
   }
 
   public FileSystemImplementation remove(String name, boolean recursive) {
-    FileSystemItems item = Optional.ofNullable(currentDirectory.getItem(name))
+    FileSystemItems item =
+        Optional.ofNullable(currentDirectory.getItem(name))
             .orElseThrow(() -> new IllegalArgumentException("Item not found: " + name));
 
     if (item.isDirectory() && !recursive) {
       Directory directory = (Directory) item;
       if (!directory.isEmpty()) {
-        throw new IllegalArgumentException("Cannot remove non-empty directory without recursive flag.");
+        throw new IllegalArgumentException(
+            "Cannot remove non-empty directory without recursive flag.");
       }
     }
 
@@ -59,6 +60,7 @@ public record FileSystemImplementation(Directory root, Directory currentDirector
     }
     return original;
   }
+
   public boolean itemExists(String name) {
     return currentDirectory.getItem(name) != null;
   }
@@ -90,21 +92,22 @@ public record FileSystemImplementation(Directory root, Directory currentDirector
         }
       } else {
 
-        current = (Directory) Optional.ofNullable(current.getItem(part))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid path: " + path));
+        current =
+            (Directory)
+                Optional.ofNullable(current.getItem(part))
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid path: " + path));
       }
     }
 
     return current;
   }
 
-
   private void validateName(String name) {
     if (name == null || name.isBlank() || name.contains("/"))
       throw new IllegalArgumentException("Invalid name: " + name);
   }
 
-  public Directory getRoot(){
+  public Directory getRoot() {
     return root;
   }
 }

@@ -30,5 +30,4 @@ public record File(String name, String content) implements FileSystemItems {
     File file = (File) o;
     return name.equals(file.name) && content.equals(file.content);
   }
-
 }

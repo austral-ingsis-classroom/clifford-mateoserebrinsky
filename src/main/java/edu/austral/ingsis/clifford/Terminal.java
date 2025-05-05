@@ -21,8 +21,7 @@ public class Terminal {
     }
 
     Result<Pair<String, FileSystemImplementation>> executionResult =
-            parsingResult.getValue().execute(system);
-
+        parsingResult.getValue().execute(system);
 
     if (executionResult.isSuccess()) {
       this.system = executionResult.getValue().second();
@@ -40,5 +39,3 @@ public class Terminal {
     return executionResult;
   }
 }
-
-
